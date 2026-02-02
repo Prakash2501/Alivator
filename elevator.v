@@ -16,10 +16,6 @@ module elevator_system (
     wire [3:0] dout1, dout2;
     wire rd1, rd2;
 
-    // FSM extra outputs
-    wire [1:0] dir1, dir2;
-    wire door1, door2;
-
     // Scheduler
     scheduler_elevator SCH (
         clk, rst,
@@ -29,7 +25,7 @@ module elevator_system (
         din1, din2
     );
 
-    // FIFOs
+    // FIFO for Lift-1
     fifo_elevator F1 (
         clk, rst,
         wr1, rd1,
@@ -38,6 +34,7 @@ module elevator_system (
         empty1
     );
 
+    // FIFO for Lift-2
     fifo_elevator F2 (
         clk, rst,
         wr2, rd2,
@@ -46,15 +43,13 @@ module elevator_system (
         empty2
     );
 
-    // FSMs
+    // Elevator FSMs
     elevator_fsm L1 (
         clk, rst,
         empty1,
         dout1,
         rd1,
-        floor_l1,
-        dir1,
-        door1
+        floor_l1
     );
 
     elevator_fsm L2 (
@@ -62,9 +57,8 @@ module elevator_system (
         empty2,
         dout2,
         rd2,
-        floor_l2,
-        dir2,
-        door2
+        floor_l2
     );
 
 endmodule
+
