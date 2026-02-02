@@ -36,4 +36,3 @@ module fifo_elevator (
         end
     end
 endmodule
-
