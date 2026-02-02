@@ -1,38 +1,50 @@
-module fifo_elevator (
+module elevator_fsm (
     input clk,
     input rst,
-    input wr_en,
-    input rd_en,
-    input [3:0] din,
-    output reg [3:0] dout,
-    output reg empty
+    input fifo_empty,
+    input [3:0] fifo_dout,
+    output reg fifo_rd,
+    output reg [3:0] floor,
+    output reg [1:0] dir,
+    output reg door
 );
 
-    reg [3:0] mem [0:7];
-    reg [2:0] wr_ptr, rd_ptr;
-    reg [3:0] count;
+    reg [3:0] target;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin
-            wr_ptr <= 0;
-            rd_ptr <= 0;
-            count  <= 0;
-            empty  <= 1;
-            dout   <= 0;
+            floor <= 0;
+            dir   <= 2'b11;
+            door  <= 0;
+            fifo_rd <= 0;
+            target <= 0;
         end else begin
-            if (wr_en && count < 8) begin
-                mem[wr_ptr] <= din;
-                wr_ptr <= wr_ptr + 1;
-                count <= count + 1;
-            end
+            fifo_rd <= 0;
+            door <= 0;
 
-            if (rd_en && count > 0) begin
-                dout <= mem[rd_ptr];
-                rd_ptr <= rd_ptr + 1;
-                count <= count - 1;
-            end
+            if (dir == 2'b11 && !fifo_empty) begin
+                fifo_rd <= 1;
+                target <= fifo_dout;
 
-            empty <= (count == 0);
+                if (fifo_dout > floor) dir <= 2'b00;
+                else if (fifo_dout < floor) dir <= 2'b01;
+            end
+            else if (dir == 2'b00) begin
+                if (floor < target)
+                    floor <= floor + 1;
+                else begin
+                    door <= 1;
+                    dir <= fifo_empty ? 2'b11 : dir;
+                end
+            end
+            else if (dir == 2'b01) begin
+                if (floor > target)
+                    floor <= floor - 1;
+                else begin
+                    door <= 1;
+                    dir <= fifo_empty ? 2'b11 : dir;
+                end
+            end
         end
     end
 endmodule
